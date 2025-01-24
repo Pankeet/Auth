@@ -1,0 +1,67 @@
+<html>
+    <head>
+        <title> Auth Website </title>
+        <meta charset="UTF-8">
+    </head>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.7.7/axios.min.js"></script>
+<script>
+    // Sign UP function
+    async function signup(){
+        const username = document.getElementsByTagName("input")[0].value;
+        const password = document.getElementsByTagName("input")[1].value;
+        
+        await axios.post("http://localhost:8080/signup",{
+            username : username , 
+            password : password 
+        });
+        alert("You have signed Up successfully");
+    }
+
+    // Sign IN
+    async function signin(){
+        console.log("p");
+        const username = document.getElementsByTagName("input")[2].value;
+        const password = document.getElementsByTagName("input")[3].value; 
+
+        let response = await axios.post("http://localhost:8080/signin",{
+            username : username , 
+            password : password 
+        }); 
+        localStorage.setItem("token", response.data.token);
+        alert("You have signed in !");
+    } 
+
+    // User Information:
+    async function userinfo(){
+        const response = await axios.get("http://localhost:8080/me",{
+            headers : {
+                token : localStorage.getItem("token")
+            }
+        })
+        document.getElementById("userinfo").innerHTML = "Username" + response.data.username;
+    }
+    //userinfo();
+</script>
+<body>
+<div id="signup">
+    SIGN UP: - <input type = "text" placeholder ="username" name="username" id="user-name">
+               <input type = "text" placeholder="password" name = "password" id = "pass-word"> 
+               <button onclick = "signup()"> Submit </button>
+</div>
+<br>
+<div id="signin">
+    Sign IN :- <input type = "text" placeholder ="username" id = "username">
+               <input type = "text" placeholder="password" id = "password">
+               <button onclick = "signin()"> Submit </button>
+</div>
+<br>
+<div>
+    User Information :
+    <div id="userinfo"></div>
+</div>
+<br>
+<div id="logout">
+    Logout :- <button onclick="logout()"> Logout </button>
+</div>
+</body>
+</html>
