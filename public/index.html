@@ -14,12 +14,12 @@
             username : username , 
             password : password 
         });
+        if(response != "User Already Exsists")
         alert("You have signed Up successfully");
     }
 
     // Sign IN
     async function signin(){
-        console.log("p");
         const username = document.getElementsByTagName("input")[2].value;
         const password = document.getElementsByTagName("input")[3].value; 
 

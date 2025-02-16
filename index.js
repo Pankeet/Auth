@@ -1,98 +1,91 @@
-const express = require("express");
+const express = require('express');
 const jwt = require('jsonwebtoken');
 const app = express();
-const JWT_SECRET = "AuthUSingJwt";
-// Currently using Local Database
-let user = [];
-
+require('dotenv').config();
+// Json parser Middleware to parse Json data of req.body
 app.use(express.json());
 
-app.get('/', function(req, res){
-    res.sendFile(__dirname + "/public/index.html");
-})
-// Middleware for authentication
-function auth(req, res, next){
-        const token = req.headers.token;
-        const decodedtoken = jwt.verify(token, JWT_SECRET);
-        if(decodedtoken.username){  
-                req.username = decodedtoken.username;
-                console.log("verified user "+decodedtoken.username);
-                next();
-        }
-        else{
-            res.send("You are not logged in ! Please log in again");
-        }
-}
+// Using localData base 
+const users = [];
 
-function logger(req,res, next){
-    console.log(req.method +" req came!");
-    next();
-}
-// SIGNUP
-app.post('/signup', logger, function(req,res){
-        const username = req.body.username;
-        const password = req.body.password;
-        // Check if the user already exsists
-        let b = true ;
-        for(let i=0;i<user.length;i++){
-            if(user[i].username == username){
-                res.send("User Already Exsists");
-                b = false;
+app.post("/signup", function (req, res) {
+    const { username , password } = req.body;
+
+    users.push({
+        username , 
+        password
+    })    
+
+    res.json({
+        message: "You are signed up"
+    })
+
+   // console.log(users)
+    
+})
+
+app.post("/signin", function(req, res) {
+
+    const { username , password } = req.body;
+
+    // maps and filter
+    let foundUser = null;
+
+    for (let i = 0; i<users.length; i++) {
+        if (users[i].username == username && users[i].password === password) {
+            foundUser = users[i]
+        }
+    }
+
+    if (foundUser) {
+        //console.log("\n",foundUser.username);
+
+        // Signing username and password with secret key
+        const token = jwt.sign({
+            username ,
+            password , 
+        }, process.env.JWT_AUTH_SECRET, {noTimestamp : true}) ;
+
+        // foundUser.token = token;
+        res.json({
+            token: token
+        })
+    } else {
+        res.status(403).send({
+            message: "Invalid username or password"
+        })
+    }
+})
+
+app.get("/me", function(req, res) {
+    
+    const token = req.headers.token 
+    try{
+        const decoded = jwt.verify(token , process.env.JWT_AUTH_SECRET); 
+        console.log("decoded" , decoded);
+
+        const username = decoded.username;
+        let UserFound = null;
+
+        for (let i = 0; i < users.length; i++) {
+            if (users[i].username === username)  {
+                UserFound = users[i]
             }
         }
-        if(b){
-        user.push({
-            username : username,
-            password : password
-        })
-        console.log(user)
-    }
-        res.send("You have signed up! 🍾");
-})
 
-// SIGNIN
-app.post("/signin", logger , function(req, res){
-    const username = req.body.username;
-    const password =  req.body.password;
-    let foundi = null;
-    for(let i=0;i<user.length;i++){  
-        if (user[i].username.trim() === username.trim() && user[i].password.trim() === password.trim()) {
-            foundi = user[i];
-            break;
-        }
-        }
-
-        if(foundi){
-        const token = jwt.sign({
-            username : foundi.username
-        }, JWT_SECRET);
-
-        foundi.token = token;
-        console.log(token)
-
-        res.json({
-            token : token
+        if (UserFound) {
+            res.status(200).json({
+                username : UserFound.username,
+                password : UserFound.password
             })
         } 
-        else{
-            res.status(403).send("Invalid Token");
     }
-  
+    catch(e){
+        res.status(403).json({
+            error : "Invalid Token ! Please sign-in again"
+        });
+    }
 })
 
-// ME endpoint
-app.get('/me', logger, auth ,function (req, res) {
 
-        for (let i = 0; i < user.length; i++) {
-            if (user[i].username === req.username) {
-                return res.json({
-                    Username : req.username
-                });
-            }
-        }
-
-        // If no user is found
-        res.status(401).send("Invalid Token");
-    });
- 
-app.listen(8080);   
+app.listen(3000);// that the http server is listening on port 3000
