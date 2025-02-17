@@ -1,9 +1,11 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const app = express();
+const cors = require('cors');
 require('dotenv').config();
 // Json parser Middleware to parse Json data of req.body
 app.use(express.json());
+app.use(cors());
 
 // Using localData base 
 const users = [];
@@ -19,8 +21,6 @@ app.post("/signup", function (req, res) {
     res.json({
         message: "You are signed up"
     })
-
-   // console.log(users)
     
 })
 
@@ -38,7 +38,6 @@ app.post("/signin", function(req, res) {
     }
 
     if (foundUser) {
-        //console.log("\n",foundUser.username);
 
         // Signing username and password with secret key
         const token = jwt.sign({
@@ -62,7 +61,6 @@ app.get("/me", function(req, res) {
     const token = req.headers.token 
     try{
         const decoded = jwt.verify(token , process.env.JWT_AUTH_SECRET); 
-        console.log("decoded" , decoded);
 
         const username = decoded.username;
         let UserFound = null;
@@ -88,4 +86,4 @@ app.get("/me", function(req, res) {
 })
 
 
-app.listen(3000);// that the http server is listening on port 3000
+app.listen(8080);// that the http server is listening on port 3000
